@@ -43,10 +43,14 @@ def getFssScanErrorObjectInventoryList(logsClient, scannerLambdaLogGroupNamesLis
         tempDict = {}
 
         for i in range(0, len(result)):
-            
-            tempDict.update({result[i]["field"]: result[i]["value"]})
 
-        resultList.append(tempDict)    
+            if result[i]["field"] not in ["@timestamp", "@ptr"]:
+            
+                tempDict.update({result[i]["field"]: result[i]["value"]})
+        
+        if tempDict not in resultList:
+
+            resultList.append(tempDict)    
 
     return resultList
 
