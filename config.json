@@ -1,0 +1,10 @@
+{
+    "scanner": {
+        "error-status": {
+            "invalid license status": true,
+            "unsuccessful scan": true,
+            "scanner error": true,
+            "unsuccessful scanner invocation": true
+        }
+    }
+}

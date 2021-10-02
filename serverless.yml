@@ -1,0 +1,52 @@
+org: georgedavis
+app: filestoragesecurity-autoremediate
+service: filestoragesecurity-autoremediate
+
+frameworkVersion: '2'
+
+provider:
+  name: aws
+  runtime: python3.8
+  stage: prod
+  region: us-east-2
+  memorySize: 128
+  timeout: 60
+  logRetentionInDays: 14
+  environment:    
+    scannerLambdaLogGroupNames: /aws/lambda/AIO-TM-FileStorageSecurity-Demo-Scan-ScannerLambda-BRRBF3F7AXCS,/aws/lambda/All-in-one-TM-FileStorageSecurity-Sc-ScannerLambda-9SIUL4PFW19W # Comma separated values
+    logGroupInsightQuery: fields @timestamp, @message, ispresent(scanning_result.Findings.0.malware) as infected, scanning_result.Findings.0.malware as malware, file_url | filter @message like 'scanner result' | sort @timestamp desc | parse file_url 'https://*.*/*' as srcBucket, region, key | display @timestamp, scanner_status_message, infected, malware, srcBucket, region, key
+    timeDeltaInLogQuery: 6 # In hours
+  tags:
+    BusinessCase: FSS-AutoRemediation
+    Owner: TrendMicro
+    CodeSource: https://github.com/GeorgeDavis-TM/filestoragesecurity-autoremediate.git
+  stackTags:
+    BusinessCase: FSS-AutoRemediation
+    Owner: TrendMicro
+    CodeSource: https://github.com/GeorgeDavis-TM/filestoragesecurity-autoremediate.git
+  iam:
+    role:
+      name: filestoragesecurity-autoremediate
+      path: /
+      statements:
+        - Effect: 'Allow'
+          Resource: '*'
+          Action: 
+            - 's3:*'
+            - 'kms:*'
+            - 'logs:*'
+      tags:
+        BusinessCase: FSS-AutoRemediation
+        Owner: TrendMicro
+        CodeSource: https://github.com/GeorgeDavis-TM/filestoragesecurity-autoremediate.git
+  lambdaHashingVersion: 20201221
+
+functions:
+  main:
+    handler: handler.main
+    description: Scheduled run of File Storage Security Auto-Remediation Tasks    
+    events:
+      - schedule:
+          name: scheduled-filestoragesecurity-autoremediation
+          description: 'Cloud One File Storage Security Hourly Auto-Remediation Schedule'
+          rate: rate(1 hour)
